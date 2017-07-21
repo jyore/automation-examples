@@ -24,7 +24,7 @@ The following steps are required in order to run this exampled:
 * Ensure python, setup-tools, and python-pip are installed on your system (virtualenv is highly recommended)
 * Install ansible and boto by running
 ~~~
-$ pip install ansible boto
+$ pip install ansible boto boto3
 ~~~
 
 * Create or Upload a keypair to AWS EC2 Key Pairs for logging into the instance with
