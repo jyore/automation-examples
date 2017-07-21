@@ -1,5 +1,5 @@
-tf-puppet-nginx
----------------
+aws-tf-puppet-nginx
+-------------------
 
 The goal of this example is to have a running nginx instance on an AWS EC2 isntance using Terraform and Puppet.
 
@@ -8,7 +8,7 @@ The goal of this example is to have a running nginx instance on an AWS EC2 isnta
 
 This example will launch a minimal web infrastructure into AWS, including the following resources:
 
-* VPC w/ internet router
+* VPC w/ internet gateway and router
 * Security Group
 * EC2 Instance
 
