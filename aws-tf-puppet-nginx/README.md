@@ -80,7 +80,7 @@ $ curl <ip-address>
 And if you browse to the ip address from your local machine, you should see the hello world message in your browser!
 
 
-# Terdown
+# Teardown
 
 Now that the example has run, we can destroy the infrastructure in a single command
 ~~~
