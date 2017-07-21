@@ -1,0 +1,47 @@
+---
+
+- hosts: tag_role_webapp
+  gather_facts: True
+  user: centos
+  vars_files:
+    - vars/aws.yaml
+  tasks:
+  - name: instance removed from security groups
+    ec2:
+      state: running
+      region: "{{ aws_region }}"
+      instance_ids: "{{ ec2_id }}"
+      group_id: ""
+    delegate_to: localhost
+  - name: instance terminated
+    ec2:
+      state: absent
+      region: "{{ aws_region }}"
+      instance_ids: "{{ ec2_id }}"
+      wait: True
+    delegate_to: localhost
+
+
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  vars_files:
+    - vars/aws.yaml
+  tasks:
+  - name: ssh security group removed
+    ec2_group:
+      name: public-ssh-sg
+      region: "{{ aws_region }}"
+      state: absent
+  - name: nginx security group removed
+    ec2_group:
+      name: nginx-sg
+      region: "{{ aws_region }}"
+      state: absent
+  - name: vpc removed
+    ec2_vpc:
+      state: absent
+      cidr_block: 10.0.0.0/16
+      region: "{{ aws_region }}"
+      resource_tags: { "Name" : "aws-ansible-nginx-vpc" }
+

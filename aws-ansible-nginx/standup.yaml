@@ -3,6 +3,8 @@
 - hosts: localhost
   connection: local
   gather_facts: False
+  vars:
+    aws_state: present
   vars_files:
     - vars/aws.yaml
   roles:
