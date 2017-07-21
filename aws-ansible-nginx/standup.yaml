@@ -1,0 +1,18 @@
+---
+
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  vars_files:
+    - vars/aws.yaml
+  roles:
+    - aws
+
+- hosts: tag_role_webapp
+  gather_facts: True
+  become: yes
+  become_method: sudo
+  user: centos
+  roles:
+    - common
+    - nginx

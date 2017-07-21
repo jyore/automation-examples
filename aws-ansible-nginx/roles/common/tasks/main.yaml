@@ -1,0 +1,13 @@
+---
+
+- name: os up to date
+  yum: name=* state=latest update_cache=yes
+
+- name: base packages installed
+  yum:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - epel-release
+    - libsemanage-python
+
