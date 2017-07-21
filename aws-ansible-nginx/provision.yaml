@@ -1,0 +1,10 @@
+
+
+- hosts: tag_role_webapp
+  gather_facts: True
+  become: yes
+  become_method: sudo
+  user: centos 
+  roles:
+    - common
+    - nginx

@@ -1,29 +1,55 @@
 ---
 
 - name: vpc configured
-  ec2_vpc:
+  ec2_vpc_net:
+    name: aws-ansible-nginx-vpc
     state: present
     cidr_block: 10.0.0.0/16
     region: "{{ aws_region }}"
-    resource_tags: { "Name" : "aws-ansible-nginx-vpc" }
-    subnets:
-      - cidr: 10.0.1.0/24
-        az: "{{ aws_region }}a"
-        resource_tags: { "Name" : "aws-ansible-nginx-vpc" }
-    internet_gateway: true
-    route_tables:
-      - subnets:
-          - 10.0.1.0/24
-        routes:
-          - dest: 0.0.0.0/0
-            gw: igw  
+    tags: 
+      Name: aws-ansible-nginx-vpc
   register: vpc
+
+
+- name: subnet configured
+  ec2_vpc_subnet:
+    state: present
+    vpc_id: "{{ vpc.vpc.id }}"
+    region: "{{ aws_region }}"
+    cidr: 10.0.1.0/24
+    az: "{{ aws_region}}a"
+    resource_tags:
+      Name: aws-ansible-nginx-subnet
+  register: subnet
+
+
+- name: internet gateway configured
+  ec2_vpc_igw:
+    vpc_id: "{{ vpc.vpc.id }}"
+    region: "{{ aws_region }}"
+    state: present
+  register: igw
+
+
+- name: route table configured
+  ec2_vpc_route_table:
+    vpc_id: "{{ vpc.vpc.id }}"
+    region: "{{ aws_region }}"
+    tags:
+      Name: aws-ansible-nginx-route_table
+    subnets:
+      - "{{ subnet.subnet.id }}"
+    routes:
+      - dest: 0.0.0.0/0
+        gateway_id: "{{ igw.gateway_id }}"
+  register: route_table
+
 
 - name: nginx security group configured
   ec2_group:
     name: nginx-sg
     description: Security Group for NGINX
-    vpc_id: "{{ vpc.vpc_id }}"
+    vpc_id: "{{ vpc.vpc.id }}"
     region: "{{ aws_region }}"
     rules:
       - proto: tcp
@@ -41,7 +67,7 @@
   ec2_group:
     name: public-ssh-sg
     description: Security Group for public ssh
-    vpc_id: "{{ vpc.vpc_id }}"
+    vpc_id: "{{ vpc.vpc.id }}"
     region: "{{ aws_region }}"
     rules:
       - proto: tcp
@@ -67,7 +93,7 @@
     key_name: "{{ key_name }}"
     instance_type: "{{ instance_type }}"
     image: "{{ ami_find.results[0].ami_id }}"
-    vpc_subnet_id: "{{ vpc.subnets[0].id }}"
+    vpc_subnet_id: "{{ subnet.subnet.id }}"
     assign_public_ip: yes
     region: "{{ aws_region }}"
     exact_count: 1
@@ -80,4 +106,16 @@
       - nginx-sg
       - public-ssh-sg
     wait: yes
+  register: ec2
+
+
+- name: instance ssh available
+  wait_for:
+    host: "{{ item.public_ip }}"
+    port: 22
+    delay: 60
+    timeout: 320
+    state: started
+  with_items: "{{ ec2.tagged_instances }}"
+    
 

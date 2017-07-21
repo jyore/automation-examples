@@ -28,20 +28,54 @@
   vars_files:
     - vars/aws.yaml
   tasks:
+  - name: register vpc metadata
+    ec2_vpc_net:
+      state: present
+      name: aws-ansible-nginx-vpc
+      cidr_block: 10.0.0.0/16
+      region: "{{ aws_region }}"
+      resource_tags: 
+        Name: aws-ansible-nginx-vpc
+    register: vpc
   - name: ssh security group removed
     ec2_group:
       name: public-ssh-sg
+      vpc_id: "{{ vpc.vpc.id }}"
       region: "{{ aws_region }}"
       state: absent
   - name: nginx security group removed
     ec2_group:
       name: nginx-sg
       region: "{{ aws_region }}"
+      vpc_id: "{{ vpc.vpc.id }}"
       state: absent
+  - name: route table removed
+    ec2_vpc_route_table:
+      region: "{{ aws_region }}"
+      vpc_id: "{{ vpc.vpc.id }}"
+      tags:
+        Name: aws-ansible-nginx-route_table
+      state: absent
+  - name: internet gateway removed
+    ec2_vpc_igw:
+      region: "{{ aws_region }}"
+      vpc_id: "{{ vpc.vpc.id }}"
+      state: absent
+  - name: subnet configured
+    ec2_vpc_subnet:
+      state: absent
+      vpc_id: "{{ vpc.vpc.id }}"
+      region: "{{ aws_region }}"
+      cidr: 10.0.1.0/24
+      az: "{{ aws_region}}a"
+      resource_tags:
+        Name: aws-ansible-nginx-subnet
   - name: vpc removed
-    ec2_vpc:
+    ec2_vpc_net:
       state: absent
+      name: aws-ansible-nginx-vpc
       cidr_block: 10.0.0.0/16
       region: "{{ aws_region }}"
-      resource_tags: { "Name" : "aws-ansible-nginx-vpc" }
+      resource_tags:
+        Name: aws-ansible-nginx-vpc
 
